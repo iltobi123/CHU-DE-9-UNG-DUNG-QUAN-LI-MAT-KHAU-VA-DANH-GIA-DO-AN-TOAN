@@ -2,6 +2,9 @@
 
 **NHÓM THỰC HIỆN:** TrustMiiBroo
 
+## Bài thuyết trình
+- **Link Canva:** [Xem bài thuyết trình](https://www.canva.com/design/DAHGaZr7X7g/Xs0IYZwqaLA9gmW_L_I2w/edit)
+
 ## Thành viên
 
 | STT | Họ và tên | MSSV/Mã định danh | Vai trò / Công việc |
