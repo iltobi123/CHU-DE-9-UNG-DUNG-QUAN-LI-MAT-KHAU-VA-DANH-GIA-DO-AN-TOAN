@@ -144,7 +144,3 @@ So the frontend and backend must run on the expected local address and port unle
 
 - build command: `pip install -r requirements.txt`
 - start command: `uvicorn backend:app --host 0.0.0.0 --port $PORT`
-
-## Notes
-
-This repository contains both a backend API and older AI experiment files under `backend/ai/`. The README above describes the code path that is actually used by `backend/backend.py` today.
