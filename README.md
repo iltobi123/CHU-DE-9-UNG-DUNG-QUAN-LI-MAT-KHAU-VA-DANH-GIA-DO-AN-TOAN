@@ -3,7 +3,7 @@
 **NHÓM THỰC HIỆN:** TrustMiiBroo
 
 ## Bài thuyết trình
-- **Link Canva:** [Xem bài thuyết trình](https://www.canva.com/design/DAHGaZr7X7g/Xs0IYZwqaLA9gmW_L_I2w/edit)
+- **Link Canva:** [Xem bài thuyết trình](https://canva.link/6yqxfyedkqrpwpg)
 
 ## Thành viên
 
