@@ -46,7 +46,7 @@ The repository also contains older AI artifacts and dependency files under `back
 From the `backend` directory:
 
 ```bash
-pip install -r requirements.txt
+pip install -r backend/ai/requirements.txt
 ```
 
 If you are running only the Gemini-backed password enhancer code under `backend/ai/`, install:
