@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 # 1. API KEY CỦA BẠN
-API_KEY = "--------"
+API_KEY = "__________________________________"  # <-- Thay bằng API Key của bạn
 
 # 2. TẠO FILE .ENV
 current_dir = os.path.dirname(os.path.abspath(__file__))

@@ -1,99 +1,145 @@
-# TrustMiiBro – Password Enhancer Backend
+# TrustMiiBro
 
-TrustMiiBro is a FastAPI backend that takes a weak password or a short seed phrase and returns an enhanced password with a target length and optional character requirements.
+TrustMiiBro is a password security project with two parts:
 
-The active backend logic is in `backend/backend.py`, and the password generation pipeline is implemented in `backend/ai/inference.py`.
+1. a browser-based password checker that estimates strength in real time, checks for leaked passwords, and explains basic password requirements;
+2. a FastAPI backend that turns a weak password or seed word into a stronger generated password, with a Google Gemini-powered enhancement flow and a local fallback.
 
-## What this project does
+The frontend lives in `Web/` and the backend lives in `backend/`.
 
-The API accepts:
+## What the project does
 
-- a base password or phrase
-- a target length
-- options to include uppercase letters, numbers, symbols, and to avoid ambiguous characters
+When you type a password in the checker page, the browser:
 
-It then:
+- evaluates password strength with `zxcvbn`,
+- shows which requirements are satisfied,
+- checks whether the password appears in known breaches through the Have I Been Pwned range API.
 
-1. asks Google Gemini 1.5 Flash for a creative password candidate,
-2. cleans and adjusts the output in Python,
-3. pads or trims the result to match the requested length,
-4. falls back to a local generator if the AI call fails.
+When you use the generator section, the frontend sends your input to the backend API. The backend:
+
+- reads the Gemini API key from `.env`,
+- asks Gemini for a password-like result,
+- cleans and adjusts the result to match your options,
+- pads or trims the output to the requested length,
+- falls back to a local random generator if the AI call fails.
 
 ## Project structure
 
-- `backend/backend.py` – FastAPI app and `/enhance` endpoint
-- `backend/ai/inference.py` – password enhancement logic
-- `backend/ai/start.py` – creates a `.env` file and starts Uvicorn
-- `Web/` – frontend files that call the backend API
-- `backend/render.yaml` – Render deployment config
+```text
+TrustMiiBro/
+├── Web/
+│   ├── home.html         # Frontend page
+│   ├── CSS/home.css      # Page styling
+│   └── JS/home.js        # Password checker + API calls
+└── backend/
+    ├── backend.py        # FastAPI app with /enhance
+    ├── ai/
+    │   ├── inference.py  # Gemini + fallback password logic
+    │   └── start.py      # Writes .env and starts Uvicorn
+    ├── requirements.txt
+    └── render.yaml       # Render deployment config
+```
 
 ## Requirements
 
-The runtime code uses:
+To run the backend, you need:
 
+- Python 3.10+
 - `fastapi`
 - `uvicorn`
 - `pydantic`
 - `python-dotenv`
 - `google-genai`
 
-The repository also contains older AI artifacts and dependency files under `backend/ai/`, but the currently active backend path is the FastAPI + Gemini flow above.
+The backend requirements file also includes `torch` and `scikit-learn`, which appear to be leftover packages from earlier experiments.
+
+The frontend uses:
+
+- the `zxcvbn` library from a CDN,
+- the Have I Been Pwned password range API,
+- the backend running on `http://127.0.0.1:8000`.
 
 ## Setup
 
-### 1) Install dependencies
+### 1) Install backend dependencies
 
-From the `backend` directory:
+From the repository root:
 
 ```bash
-pip install -r backend/ai/requirements.txt
+cd backend
+pip install -r requirements.txt
 ```
 
-If you are running only the Gemini-backed password enhancer code under `backend/ai/`, install:
+If your environment is missing `google-genai` or `python-dotenv`, install them manually:
 
 ```bash
-pip install fastapi uvicorn pydantic google-genai python-dotenv
+pip install google-genai python-dotenv
 ```
 
 ### 2) Add your Gemini API key
 
-`backend/ai/start.py` writes a `.env` file at the project root with:
+`backend/ai/start.py` writes a `.env` file inside the `backend/` folder. That file should contain:
 
 ```bash
-GEMINI_API_KEY=your_key_here
+GEMINI_API_KEY=your_api_key_here
 ```
 
-In the current file, `API_KEY` is just a placeholder, so replace it with your real key before starting the app.
+Replace the placeholder with your real Gemini API key before starting the server.
 
-### 3) Run the backend
+### 3) Start the backend
 
-You can start the app with:
+The easiest way is to run the startup script from the repository root:
 
 ```bash
 python backend/ai/start.py
 ```
 
-That script creates `.env` and launches:
+That script creates or updates `backend/.env` and starts Uvicorn on port `8000`.
+
+You can also start it manually from the `backend/` folder after creating `.env` yourself:
 
 ```bash
+cd backend
 uvicorn backend:app --reload
 ```
 
-The API runs locally at:
+## Run the frontend
 
-```bash
-http://127.0.0.1:8000
-```
+Open `Web/home.html` in your browser.
+
+The page has two main parts:
+
+- the password checker, which updates as you type;
+- the AI password generator, which calls the backend API.
+
+If the backend is not running, the generator button will show an API connection error.
+
+## How to use it
+
+### Password checker
+
+1. Type a password into the input field.
+2. Watch the strength bar update.
+3. Review the requirement indicators.
+4. See whether the password has appeared in known leaks.
+
+### AI password generator
+
+1. Enter a base word, or leave it blank for a random phrase.
+2. Choose a target length.
+3. Select whether to include uppercase letters, numbers, symbols, and whether to avoid tricky characters such as `I`, `l`, `O`, and `0`.
+4. Click **Generate**.
+5. Copy the result with the clipboard button.
 
 ## API
 
-### POST `/enhance`
+### `POST /enhance`
 
 Request body:
 
 ```json
 {
-  "weak_password": "my weak password",
+  "weak_password": "dragon",
   "target_len": 16,
   "inc_upper": true,
   "inc_num": true,
@@ -102,45 +148,47 @@ Request body:
 }
 ```
 
-### Response
+Response:
 
 ```json
 {
-  "original_password": "my weak password",
-  "enhanced_password": "TrUStMiiBr0!7X",
+  "original_password": "dragon",
+  "enhanced_password": "...",
   "score_percentage": 100,
   "strength_label": "Rất mạnh"
 }
 ```
 
-## Parameter meaning
+### Request fields
 
-- `weak_password`: input text used as the base for generation
-- `target_len`: final password length
+- `weak_password`: the base word or password to enhance
+- `target_len`: desired final length
 - `inc_upper`: include uppercase letters
-- `inc_num`: include numbers
+- `inc_num`: include digits
 - `inc_sym`: include symbols
-- `inc_ambig`: avoid ambiguous characters like `0`, `O`, `l`, `1`
+- `inc_ambig`: remove confusing characters like `I`, `l`, `O`, and `0`
 
-## Behavior details
+## How the backend works
 
-- If the Gemini call succeeds, the code uses the model response and then enforces the requested constraints.
-- If the Gemini call throws an exception, the code falls back to a local Python generator.
-- If `GEMINI_API_KEY` is missing, the function returns an error message inside `enhanced_password` rather than producing a generated password.
+The backend logic in `backend/ai/inference.py` follows this flow:
 
-## Frontend connection
+1. load `.env` and read `GEMINI_API_KEY`,
+2. generate a prompt for Gemini,
+3. clean the model output,
+4. enforce the requested character options,
+5. trim or pad the password to the target length,
+6. return a strength label and score,
+7. fall back to a local generator if Gemini fails.
 
-The frontend in `Web/JS/home.js` sends requests to:
+## Deployment
 
-```bash
-http://127.0.0.1:8000/enhance
-```
-
-So the frontend and backend must run on the expected local address and port unless you update the fetch URL.
-
-## Deployment note
-
-`backend/render.yaml` is configured for Render with:
+`backend/render.yaml` is already configured for Render:
 
 - build command: `pip install -r requirements.txt`
 - start command: `uvicorn backend:app --host 0.0.0.0 --port $PORT`
+
+## Notes
+
+- The frontend expects the backend at `http://127.0.0.1:8000/enhance`.
+- The browser checker still works on its own, but the generator section needs the backend.
+- The project is best run from the repository root with the backend script in `backend/ai/start.py`.

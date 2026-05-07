@@ -15,6 +15,8 @@ else:
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
 
+print("KEY:", GEMINI_API_KEY)
+
 STRENGTH_LABELS = {
     0: "Rất yếu",
     1: "Yếu",
@@ -37,6 +39,7 @@ def _pick_pad_char(inc_upper: bool, inc_num: bool, inc_sym: bool, inc_ambig: boo
     if not choices: choices.extend(list(lowers))
     
     return random.choice(choices)
+    
 
 def process_password(password: str, target_len: int = 16,
                      inc_upper: bool = True, inc_num: bool = True,
@@ -53,11 +56,11 @@ def process_password(password: str, target_len: int = 16,
     try:
         base_word = password if password and password.strip() else "một từ tiếng Anh ngẫu nhiên, hài hước"
         prompt = f"""
-        Tạo một mật khẩu sáng tạo, hài hước, mang tính hacker (leetspeak) dựa trên từ khóa: '{base_word}'.
-        Chỉ trả về chuỗi mật khẩu, khoảng 10-15 ký tự. Không in dấu ngoặc kép, không giải thích.
+        Tạo một mật khẩu sáng tạo, tàn bạo dựa trên từ khóa: '{base_word}'.
+        Chỉ trả về chuỗi mật khẩu, khoảng {target_len} ký tự. Không in dấu ngoặc kép, không giải thích.
         """
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             contents=prompt,
         )
         ai_pw = (response.text or "").strip().replace('"', '').replace("'", '').replace(' ', '')
